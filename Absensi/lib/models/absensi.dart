@@ -1,76 +1,60 @@
+// models/absensi.dart
 class Absensi {
-  final int id;
-  final int idSiswa;
-  final int idKelas;
-  final int idGuru;
-  final int idMapel;
-  final int idJadwal;
-  final DateTime tanggal;
-  final String? jamMasuk;
-  final String? jamKeluar;
-  final String status;
+  final int? id;
+  final int? id_siswa;
+  final int? id_kelas;
+  final DateTime? tanggal;
+  final String? jam_masuk;
+  final String? jam_keluar;
+  final String? status;
   final String? keterangan;
-  final String? fotoAbsensi;
-  final String? namaSiswa;
-  final String? namaKelas;
-  final String? namaGuru;
-  final String? namaMapel;
-  final String? namaJadwal;
+  final DateTime? created_at;
+  final String? nama_siswa;
+  final String? nama_kelas;
 
   Absensi({
-    required this.id,
-    required this.idSiswa,
-    required this.idKelas,
-    required this.idGuru,
-    required this.idMapel,
-    required this.idJadwal,
-    required this.tanggal,
-    this.jamMasuk,
-    this.jamKeluar,
-    required this.status,
+    this.id,
+    this.id_siswa,
+    this.id_kelas,
+    this.tanggal,
+    this.jam_masuk,
+    this.jam_keluar,
+    this.status,
     this.keterangan,
-    this.fotoAbsensi,
-    this.namaSiswa,
-    this.namaKelas,
-    this.namaGuru,
-    this.namaMapel,
-    this.namaJadwal,
+    this.created_at,
+    this.nama_siswa,
+    this.nama_kelas,
   });
 
   factory Absensi.fromJson(Map<String, dynamic> json) {
     return Absensi(
-      id: json['id'] as int,
-      idSiswa: json['id_siswa'] as int,
-      idKelas: json['id_kelas'] as int,
-      idGuru: json['id_guru'] as int,
-      idMapel: json['id_mapel'] as int,
-      idJadwal: json['id_jadwal'] as int,
-      tanggal: DateTime.parse(json['tanggal'] as String),
-      jamMasuk: json['jam_masuk'] as String?,
-      jamKeluar: json['jam_keluar'] as String?,
-      status: json['status'] as String,
+      id: json['id'] as int?,
+      id_siswa: json['id_siswa'] as int?,
+      id_kelas: json['id_kelas'] as int?,
+      tanggal: json['tanggal'] != null ? DateTime.parse(json['tanggal'].toString()) : null,
+      jam_masuk: json['jam_masuk'] as String?,
+      jam_keluar: json['jam_keluar'] as String?,
+      status: json['status'] as String?,
       keterangan: json['keterangan'] as String?,
-      fotoAbsensi: json['foto_absensi'] as String?,
-      namaSiswa: json['nama_siswa'] as String?,
-      namaKelas: json['nama_kelas'] as String?,
-      namaGuru: json['nama_guru'] as String?,
-      namaMapel: json['nama_mapel'] as String?,
-      namaJadwal: json['nama_jadwal'] as String?,
+      created_at: json['created_at'] != null ? DateTime.parse(json['created_at'].toString()) : null,
+      nama_siswa: json['nama_siswa'] as String?,
+      nama_kelas: json['nama_kelas'] as String?,
     );
   }
 
-  Map<String, dynamic> toJson() => {
-    'id': id,
-    'id_siswa': idSiswa,
-    'id_kelas': idKelas,
-    'id_guru': idGuru,
-    'id_mapel': idMapel,
-    'id_jadwal': idJadwal,
-    'tanggal': tanggal.toIso8601String().split('T').first,
-    'jam_masuk': jamMasuk,
-    'jam_keluar': jamKeluar,
-    'status': status,
-    'keterangan': keterangan,
-    'foto_absensi': fotoAbsensi,
-  };
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'id_siswa': id_siswa,
+      'id_kelas': id_kelas,
+      'tanggal': tanggal?.toIso8601String().split('T')[0],
+      'jam_masuk': jam_masuk,
+      'jam_keluar': jam_keluar,
+      'status': status,
+      'keterangan': keterangan,
+      'created_at': created_at?.toIso8601String(),
+      'nama_siswa': nama_siswa,
+      'nama_kelas': nama_kelas,
+    };
+  }
 }

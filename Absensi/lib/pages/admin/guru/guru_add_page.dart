@@ -1,3 +1,4 @@
+import 'package:absensi/widgets/absensi_main_button.dart';
 import 'package:flutter/material.dart';
 import '../../../models/guru.dart';
 import '../../../models/user.dart';
@@ -146,11 +147,10 @@ class _GuruAddPageState extends State<GuruAddPage> {
                     icon: Icons.transgender,
                   ),
                   items: const [
-                    DropdownMenuItem(
-                        value: 'Laki-laki', child: Text('Laki-laki')),
-                    DropdownMenuItem(
-                        value: 'Perempuan', child: Text('Perempuan')),
+                    DropdownMenuItem(value: 'L', child: Text('Laki-laki')),
+                    DropdownMenuItem(value: 'P', child: Text('Perempuan')),
                   ],
+
                   onChanged: (value) {
                     setState(() {
                       _selectedGender = value;
@@ -168,21 +168,12 @@ class _GuruAddPageState extends State<GuruAddPage> {
                   keyboardType: TextInputType.phone,
                 ),
           const SizedBox(height: 24),
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton.icon(
-              onPressed: saveGuru,
-              label: const Text(
-                'Simpan',
-                style:
-                TextStyle(fontSize: 16, color: Colors.white),
-              ),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.red,
-                padding: const EdgeInsets.symmetric(vertical: 16),
-              ),
-            ),
-          ),
+                SizedBox(
+                  width: double.infinity,
+                  child: _isLoading
+                      ? const Center(child: CircularProgressIndicator())
+                      : AbsensiMainButton(label: 'Simpan', onTap: saveGuru),
+                ),
               ],
             ),
           ),

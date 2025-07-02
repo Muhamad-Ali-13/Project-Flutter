@@ -30,7 +30,7 @@ class Guru {
     return Guru(
       idGuru: json['id_guru'] as int,
       idUsers: json['id_users'] as int,
-      nama: json['users']?['nama'] ?? 'Tanpa Nama',// Include nama in JSON parsing
+      nama: json['nama'] ,// Include nama in JSON parsing
       nip: json['nip'] as String,
       jenisKelamin: json['jenis_kelamin'] as String,
       noHp: json['no_hp'] as String?,

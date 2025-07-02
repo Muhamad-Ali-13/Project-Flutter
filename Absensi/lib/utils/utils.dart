@@ -4,20 +4,30 @@ import 'package:intl/intl.dart';
 abstract class Utils {
   static const Color mainThemeColor = Color(0xFFFF0000);
 
-  // Warna gradasi merah dari gelap ke terang
-  static LinearGradient get redGradient => LinearGradient(
-    colors: [
-      Colors.red.shade900,
-      Colors.red.shade500,
-      Colors.red.shade300,
-    ],
-    begin: Alignment.topLeft,
-    end: Alignment.bottomRight,
-  );
 
-  static String formatTanggal(DateTime date) {
-    return DateFormat('dd MMMM yyyy').format(date);
+  /// Fungsi untuk membandingkan apakah dua tanggal memiliki hari, bulan, dan tahun yang sama
+  static bool sameDate(DateTime date1, DateTime date2) {
+    return date1.year == date2.year &&
+        date1.month == date2.month &&
+        date1.day == date2.day;
   }
+
+  /// Format tanggal ke string (misalnya: 12 Juni 2025)
+  static String formatTanggal(DateTime date) {
+    // Bisa disesuaikan ke format lokal lain
+    return '${date.day.toString().padLeft(2, '0')} '
+        '${_bulanIndonesia(date.month)} '
+        '${date.year}';
+  }
+
+  static String _bulanIndonesia(int bulan) {
+    const bulanList = [
+      '', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+      'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+    ];
+    return bulanList[bulan];
+  }
+
 
   static String formatJam(String? time) {
     if (time == null) return 'N/A';

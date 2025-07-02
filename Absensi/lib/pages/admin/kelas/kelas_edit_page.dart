@@ -15,34 +15,63 @@ class EditKelasPage extends StatefulWidget {
 class _EditKelasPageState extends State<EditKelasPage> {
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _namaKelasController;
-  late TextEditingController _idGuruController;
+
+  List<Map<String, dynamic>> _guru = [];
+  String? _selectedGuru;
   bool _isSaving = false;
+  bool _isLoading = true;
+  String? _errorMessage;
 
   @override
   void initState() {
     super.initState();
     _namaKelasController = TextEditingController(text: widget.kelas.namaKelas);
-    _idGuruController = TextEditingController(text: widget.kelas.idGuru?.toString() ?? '');
+    _selectedGuru = widget.kelas.idGuru?.toString();
+    _fetchDropdownData();
+  }
+
+  Future<void> _fetchDropdownData() async {
+    try {
+      setState(() => _isLoading = true);
+
+      final guru = await ApiService.fetchGurus();
+      setState(() {
+        _guru = guru
+            .where((g) =>
+        g is Map<String, dynamic> &&
+            g['id_guru'] != null &&
+            g['nama'] != null)
+            .toList();
+        _isLoading = false;
+        _errorMessage = null;
+      });
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+        _errorMessage = 'Gagal memuat data guru: $e';
+      });
+    }
   }
 
   @override
   void dispose() {
     _namaKelasController.dispose();
-    _idGuruController.dispose();
     super.dispose();
   }
 
   Future<void> _update() async {
     if (!_formKey.currentState!.validate()) return;
+
     setState(() => _isSaving = true);
     try {
       final kelas = Kelas(
-        namaKelas: _namaKelasController.text.trim(),
         idKelas: widget.kelas.idKelas,
-        namaGuru: widget.kelas.namaGuru,
-        idGuru: int.tryParse(_idGuruController.text.trim()) ?? 0,
+        namaKelas: _namaKelasController.text.trim(),
+        idGuru: _selectedGuru != null ? int.tryParse(_selectedGuru!) : null,
       );
-      await ApiService.updateKelas(kelas.idKelas, kelas.toJson());
+
+      await ApiService.updateKelas(kelas.idKelas!, kelas.toJson());
+
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Kelas berhasil diupdate')),
@@ -60,33 +89,13 @@ class _EditKelasPageState extends State<EditKelasPage> {
     }
   }
 
-  Widget _buildInputField({
-    required String label,
-    required IconData icon,
-    required TextEditingController controller,
-    bool isNumber = false,
-    bool optional = false,
-  }) {
-    return TextFormField(
-      controller: controller,
-      keyboardType: isNumber ? TextInputType.number : TextInputType.text,
-      validator: (value) {
-        if (!optional && (value == null || value.trim().isEmpty)) {
-          return '$label harus diisi';
-        }
-        if (isNumber && value != null && value.trim().isNotEmpty && int.tryParse(value) == null) {
-          return '$label harus berupa angka';
-        }
-        return null;
-      },
-      decoration: InputDecoration(
-        labelText: label,
-        prefixIcon: Icon(icon, color: Colors.red),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: const BorderSide(color: Colors.red, width: 2),
-        ),
+  InputDecoration _inputDecoration(String label, IconData icon) {
+    return InputDecoration(
+      labelText: label,
+      prefixIcon: Icon(icon),
+      border: const OutlineInputBorder(),
+      focusedBorder: const OutlineInputBorder(
+        borderSide: BorderSide(color: Colors.red, width: 2),
       ),
     );
   }
@@ -101,31 +110,37 @@ class _EditKelasPageState extends State<EditKelasPage> {
         iconTheme: const IconThemeData(color: Colors.white),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          color: Colors.white,
           onPressed: () => Navigator.pop(context),
         ),
       ),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(16.0),
-          child: Form(
+          child: _isLoading
+              ? const Center(child: CircularProgressIndicator(color: Colors.red))
+              : _errorMessage != null
+              ? Center(child: Text(_errorMessage!))
+              : Form(
             key: _formKey,
             child: Column(
               children: [
-                _buildInputField(
-                  label: 'Nama Kelas',
-                  icon: Icons.class_,
-                  controller: _namaKelasController,
+                Expanded(
+                  child: SingleChildScrollView(
+                    child: Column(
+                      children: [
+                        TextFormField(
+                          controller: _namaKelasController,
+                          decoration: _inputDecoration(
+                              'Nama Kelas', Icons.class_),
+                          validator: (value) => value == null || value.isEmpty
+                              ? 'Nama Kelas harus diisi'
+                              : null,
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
                 const SizedBox(height: 16),
-                _buildInputField(
-                  label: 'ID Guru (Opsional)',
-                  icon: Icons.person,
-                  controller: _idGuruController,
-                  isNumber: true,
-                  optional: true,
-                ),
-                const SizedBox(height: 32),
                 _isSaving
                     ? const CircularProgressIndicator(color: Colors.red)
                     : SizedBox(

@@ -163,7 +163,7 @@ class _EditUserPageState extends State<EditUserPage> {
                 child: _isSaving
                     ? const CircularProgressIndicator()
                     : AbsensiMainButton(
-                  label: 'Simpan Perubahan',
+                  label: 'Update',
                   onTap: _update,
                 ),
               ),

@@ -21,13 +21,11 @@ class _UserPageState extends State<UserPage> {
       return [
         Utils.mainThemeColor!.withOpacity(0.9),
         Utils.mainThemeColor!.withOpacity(0.7),
-        Utils.mainThemeColor!.withOpacity(0.5),
       ];
     } else {
       return [
         Colors.red.shade900,
         Colors.red.shade700,
-        Colors.red.shade400,
       ];
     }
   }
@@ -69,90 +67,104 @@ class _UserPageState extends State<UserPage> {
   void _showDetailModal(User user) {
     showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (_) {
+      builder: (context) {
         return Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Center(
-                child: CircleAvatar(
-                  radius: 30,
-                  backgroundColor: Colors.grey.shade300,
-                  child: Icon(Icons.person, size: 30, color: Colors.grey.shade700),
+          padding: MediaQuery.of(context).viewInsets,
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 28),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Header
+                Column(
+                  children: [
+                    CircleAvatar(
+                      radius: 35,
+                      backgroundColor: Colors.grey.shade200,
+                      child: const Icon(Icons.person, size: 36, color: Colors.grey),
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      user.nama,
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      user.email,
+                      style: const TextStyle(fontSize: 14, color: Colors.black54),
+                    ),
+                  ],
                 ),
-              ),
-              const SizedBox(height: 16),
-              Center(
-                child: Text(
-                  user.nama,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 18,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 8),
-              Center(
-                child: Text(
-                  user.email,
-                  style: const TextStyle(fontSize: 14, color: Colors.black54),
-                ),
-              ),
-              const Divider(height: 32),
-              Row(
-                children: [
-                  const Icon(Icons.security, size: 18, color: Colors.black54),
-                  const SizedBox(width: 8),
-                  Text(
-                    'Role: ',
-                    style: const TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  Text(user.role ?? 'N/A'),
-                ],
-              ),
-              if (_isAdmin) ...[
+
+                const SizedBox(height: 24),
+                const Divider(height: 1),
+
+                // Informasi Role
                 const SizedBox(height: 24),
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
                   children: [
-                    OutlinedButton.icon(
-                      onPressed: () {
-                        Navigator.pop(context);
-                        Navigator.pushNamed(
-                          context,
-                          '/edit_user',
-                          arguments: user,
-                        ).then((refresh) {
-                          if (refresh == true) setState(_loadUsers);
-                        });
-                      },
-                      icon: const Icon(Icons.edit, size: 18),
-                      label: const Text('Edit'),
+                    const Icon(Icons.security, size: 20, color: Colors.black54),
+                    const SizedBox(width: 10),
+                    const Text(
+                      'Role:',
+                      style: TextStyle(fontWeight: FontWeight.w600),
                     ),
-                    const SizedBox(width: 12),
-                    OutlinedButton.icon(
-                      style: OutlinedButton.styleFrom(
-                        side: BorderSide(color: mainColor),
-                      ),
-                      onPressed: () {
-                        Navigator.pop(context);
-                        _confirmDelete(user.idUsers);
-                      },
-                      icon: Icon(Icons.delete, size: 18, color: mainColor),
-                      label: Text(
-                        'Hapus',
-                        style: TextStyle(color: mainColor),
+                    const SizedBox(width: 10),
+                    Chip(
+                      label: Text(user.role ?? 'N/A'),
+                      backgroundColor: Colors.grey.shade100,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
                       ),
                     ),
                   ],
                 ),
+
+                // Tombol Aksi (Admin)
+                if (_isAdmin) ...[
+                  const SizedBox(height: 32),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      OutlinedButton.icon(
+                        onPressed: () {
+                          Navigator.pop(context);
+                          Navigator.pushNamed(
+                            context,
+                            '/edit_user',
+                            arguments: user,
+                          ).then((refresh) {
+                            if (refresh == true) setState(_loadUsers);
+                          });
+                        },
+                        icon: const Icon(Icons.edit, size: 20),
+                        label: const Text('Edit'),
+                      ),
+                      ElevatedButton.icon(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.red.shade600,
+                          foregroundColor: Colors.white,
+                        ),
+                        onPressed: () {
+                          Navigator.pop(context);
+                          _confirmDelete(user.idUsers);
+                        },
+                        icon: const Icon(Icons.delete, size: 20),
+                        label: const Text('Hapus'),
+                      ),
+                    ],
+                  ),
+                ],
+                const SizedBox(height: 16),
               ],
-            ],
+            ),
           ),
         );
       },

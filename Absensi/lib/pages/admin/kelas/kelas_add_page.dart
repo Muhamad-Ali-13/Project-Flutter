@@ -13,13 +13,59 @@ class AddKelasPage extends StatefulWidget {
 class _AddKelasPageState extends State<AddKelasPage> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _namaKelasController = TextEditingController();
-  final TextEditingController _waliKelasController = TextEditingController();
+  List<Map<String, dynamic>> _guru = [];
+  String? _selectedGuru;
   bool _isSaving = false;
+  bool _isLoading = true;
+  String? _errorMessage;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchDropdownData();
+  }
+
+  Future<void> _fetchDropdownData() async {
+    try {
+      setState(() => _isLoading = true);
+
+      final guru = await ApiService.fetchGurus(); // Changed to singular fetchGuru
+
+      if (mounted) {
+        setState(() {
+          // Validate and filter guru
+          _guru = guru
+              .where((guru) =>
+          guru is Map<String, dynamic> &&
+              guru['id_guru'] != null &&
+              guru['nama'] != null)
+              .toList();
+
+          _isLoading = false;
+          _errorMessage = null;
+
+          // Debug print to check data
+          print('Raw Guru Data: $guru');
+          print('Filtered Guru: $_guru');
+          print('Selected Guru: $_selectedGuru');
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _errorMessage = 'Gagal memuat data guru: $e';
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(_errorMessage!)),
+        );
+      }
+    }
+  }
 
   @override
   void dispose() {
     _namaKelasController.dispose();
-    _waliKelasController.dispose();
     super.dispose();
   }
 
@@ -30,7 +76,7 @@ class _AddKelasPageState extends State<AddKelasPage> {
     try {
       final kelas = {
         'nama_kelas': _namaKelasController.text.trim(),
-        'id_guru': int.tryParse(_waliKelasController.text.trim()) ?? null,
+        'id_guru': _selectedGuru != null ? int.tryParse(_selectedGuru!) : null,
       };
 
       await ApiService.createKelas(kelas);
@@ -48,39 +94,19 @@ class _AddKelasPageState extends State<AddKelasPage> {
         );
       }
     } finally {
-      setState(() => _isSaving = false);
+      if (mounted) {
+        setState(() => _isSaving = false);
+      }
     }
   }
 
-  Widget _buildInputField({
-    required String label,
-    required IconData icon,
-    required TextEditingController controller,
-    bool isNumber = false,
-    bool optional = false,
-  }) {
-    return TextFormField(
-      controller: controller,
-      keyboardType: isNumber ? TextInputType.number : TextInputType.text,
-      validator: (value) {
-        if (!optional && (value == null || value.trim().isEmpty)) {
-          return '$label harus diisi';
-        }
-        if (isNumber && value != null && value.trim().isNotEmpty && int.tryParse(value) == null) {
-          return '$label harus berupa angka';
-        }
-        return null;
-      },
-      decoration: InputDecoration(
-        labelText: label,
-        prefixIcon: Icon(icon, color: Colors.red),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: const BorderSide(color: Colors.red, width: 2),
-        ),
+  InputDecoration _inputDecoration(String label, IconData icon) {
+    return InputDecoration(
+      labelText: label,
+      prefixIcon: Icon(icon),
+      border: const OutlineInputBorder(),
+      focusedBorder: const OutlineInputBorder(
+        borderSide: BorderSide(color: Colors.red, width: 2),
       ),
     );
   }
@@ -102,24 +128,31 @@ class _AddKelasPageState extends State<AddKelasPage> {
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(16.0),
-          child: Form(
+          child: _isLoading
+              ? const Center(child: CircularProgressIndicator(color: Colors.red))
+              : _errorMessage != null
+              ? Center(child: Text(_errorMessage!))
+              : Form(
             key: _formKey,
             child: Column(
               children: [
-                _buildInputField(
-                  label: 'Nama Kelas',
-                  icon: Icons.class_,
-                  controller: _namaKelasController,
+                Expanded(
+                  child: SingleChildScrollView(
+                    child: Column(
+                      children: [
+                        TextFormField(
+                          controller: _namaKelasController,
+                          decoration:
+                          _inputDecoration('Nama Kelas', Icons.class_),
+                          validator: (value) => value == null || value.isEmpty
+                              ? 'Nama Kelas harus diisi'
+                              : null,
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
                 const SizedBox(height: 16),
-                _buildInputField(
-                  label: 'ID Wali Kelas (Opsional)',
-                  icon: Icons.person,
-                  controller: _waliKelasController,
-                  isNumber: true,
-                  optional: true,
-                ),
-                const SizedBox(height: 32),
                 _isSaving
                     ? const CircularProgressIndicator(color: Colors.red)
                     : SizedBox(

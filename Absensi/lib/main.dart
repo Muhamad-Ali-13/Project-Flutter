@@ -1,4 +1,5 @@
 // lib/main.dart
+import 'package:absensi/pages/guru/teacher.dart';
 import 'package:flutter/material.dart';
 
 // Import Models
@@ -6,8 +7,6 @@ import 'models/user.dart';
 import 'models/siswa.dart';
 import 'models/guru.dart';
 import 'models/kelas.dart';
-import 'models/mata_pelajaran.dart';
-import 'models/jadwal_pembelajaran.dart';
 import 'models/absensi.dart';
 
 // Import Pages
@@ -26,14 +25,6 @@ import 'pages/admin/guru/guru_edit_page.dart';
 import 'pages/admin/kelas/kelas_add_page.dart';
 import 'pages/admin/kelas/kelas_edit_page.dart';
 
-import 'pages/admin/mapel/mata_pelajaran_add_page.dart';
-import 'pages/admin/mapel/mata_pelajaran_edit_page.dart';
-
-import 'pages/admin/jadwal/add_jadwal_pembelajaran_page.dart';
-import 'pages/admin/jadwal/edit_jadwal_pembelajaran_page.dart';
-
-import 'pages/admin/absensi/absensi_add_page.dart';
-import 'pages/admin/absensi/absensi_edit_page.dart';
 
 import 'widgets/main_layout.dart';
 
@@ -58,6 +49,7 @@ class MyApp extends StatelessWidget {
       routes: {
         '/splash': (context) => SplashPage(),
         '/login': (context) => const LoginPage(),
+        // '/teacher': (context) => const TeacherPage(),
 
         // User routes
         '/add_user': (context) => const AddUserPage(),
@@ -87,26 +79,7 @@ class MyApp extends StatelessWidget {
           return EditKelasPage(kelas: kelas);
         },
 
-        // Mata Pelajaran routes
-        '/mata_pelajaran_add': (context) => const AddMataPelajaranPage(),
-        '/mata_pelajaran_edit': (context) {
-          final mata_pelajaran = ModalRoute.of(context)!.settings.arguments as MataPelajaran;
-          return EditMataPelajaranPage(mapel: mata_pelajaran);
-        },
 
-        // Jadwal Pembelajaran routes
-        '/add_jadwal_pembelajaran': (context) => const AddJadwalPembelajaranPage(),
-        '/edit_jadwal_pembelajaran': (context) {
-          final jadwal_pembelajaran = ModalRoute.of(context)!.settings.arguments as JadwalPembelajaran;
-          return EditJadwalPembelajaranPage(jadwal: jadwal_pembelajaran);
-        },
-
-        // Absensi routes
-        '/add_absensi': (context) => const AddAbsensiPage(),
-        '/edit_absensi': (context) {
-          final absensi = ModalRoute.of(context)!.settings.arguments as Absensi;
-          return EditAbsensiPage(absensi: absensi);
-        },
       },
       onGenerateRoute: (settings) {
         if (settings.name == '/main') {

@@ -17,7 +17,7 @@ class AbsensiMainButton extends StatelessWidget {
     return ElevatedButton(
       onPressed: isDisabled ? null : onTap,
       style: ElevatedButton.styleFrom(
-        backgroundColor: Colors.red, // Warna Merah
+        backgroundColor: const Color(0xFFFF0000), // Warna Merah
         foregroundColor: Colors.white, // Teks putih
         minimumSize: const Size(double.infinity, 50),
         shape: RoundedRectangleBorder(

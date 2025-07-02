@@ -1,12 +1,12 @@
 import 'dart:convert';
 import 'dart:async';
+import 'package:absensi/services/api_service.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import '../utils/utils.dart';
-import '../widgets/absensi_main_button.dart';
 import '../utils/constants.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import '../main.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../widgets/main_layout.dart';
 
 class LoginPage extends StatefulWidget {
@@ -30,69 +30,86 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   Future<void> _login() async {
-    final email = emailController.text.trim();
+    final email = emailController.text.trim().toLowerCase();
     final password = passwordController.text;
 
+    print('Sending login request - Email: "$email", Password length: ${password.length}');
+
     if (email.isEmpty || password.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Email dan password wajib diisi')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Email dan password wajib diisi')),
+        );
+      }
       return;
     }
 
     setState(() => _isLoading = true);
 
     try {
-      final url = Uri.parse('$baseUrl/login');
-      final response = await http
-          .post(
-        url,
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'email': email, 'password': password}),
-      )
-          .timeout(const Duration(seconds: 10));
+      final result = await ApiService.login(email: email, password: password);
+      final token = result['token'] as String;
+      final user = result['user'] as Map<String, dynamic>;
 
-      if (response.statusCode == 200) {
-        final body = jsonDecode(response.body);
-        final user = body['user'];
-        final token = body['token'];
-        final role = user['role'];
-        final userId = user['id'];
+      // Simpan ke FlutterSecureStorage
+      await _storage.write(key: 'token', value: token);
+      await _storage.write(key: 'role', value: user['role'] as String);
+      await _storage.write(key: 'id_users', value: user['id'].toString());
+      await _storage.write(key: 'nama', value: user['nama'] as String);
+      await _storage.write(key: 'email', value: email);
+      await _storage.write(key: 'password', value: password);
 
-        if (token != null) {
-          await _storage.write(key: 'token', value: token);
-        }
-        await _storage.write(key: 'role', value: role);
-        await _storage.write(key: 'user_id', value: userId.toString());
+      final prefs = await SharedPreferences.getInstance();
+      final idSiswa = user['id_siswa'] as int?;
+      if (idSiswa != null && idSiswa != 0) {
+        await prefs.setInt('id_siswa', idSiswa);
+        print('ID Siswa tersimpan: $idSiswa');
+      } else {
+        await prefs.remove('id_siswa');
+        print('ID Siswa tidak ada atau tidak valid');
+      }
 
+      final idKelas = user['id_kelas'] as int?;
+      if (idKelas != null && idKelas != 0) {
+        await prefs.setInt('id_kelas', idKelas);
+        print('ID Kelas tersimpan: $idKelas');
+      } else {
+        await prefs.remove('id_kelas');
+        print('ID Kelas tidak ada atau tidak valid');
+      }
 
-        // Arahkan ke halaman utama
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Login berhasil!')),
+        );
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (_) => MainLayout(role: role)),
-        );
-      } else if (response.statusCode == 401) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Email atau password salah')),
-        );
-      } else {
-        final error = jsonDecode(response.body)['error'] ?? 'Login gagal';
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(error)),
+          MaterialPageRoute(
+            builder: (_) => MainLayout(role: user['role'] as String),
+          ),
         );
       }
     } on http.ClientException {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Tidak dapat terhubung ke server')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Tidak dapat terhubung ke server')),
+        );
+      }
     } on TimeoutException {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Waktu koneksi habis, coba lagi')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Waktu koneksi habis, coba lagi')),
+        );
+      }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Kesalahan: $e')),
-      );
+      if (mounted) {
+        final errorMessage = e.toString().contains('Login gagal')
+            ? e.toString().replaceFirst('Exception: Login gagal: ', '')
+            : 'Kesalahan: $e';
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(errorMessage)),
+        );
+      }
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -120,6 +137,39 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
+  Widget _buildLoginButton() {
+    return SizedBox(
+      width: double.infinity,
+      height: 48,
+      child: ElevatedButton(
+        onPressed: _isLoading ? null : _login,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: const Color(0xFFFF0000),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          elevation: 3,
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+        ),
+        child: _isLoading
+            ? const SizedBox(
+          width: 24,
+          height: 24,
+          child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+        )
+            : const Text(
+          'Login',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+            letterSpacing: 1,
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
@@ -139,11 +189,6 @@ class _LoginPageState extends State<LoginPage> {
                   height: size.width * 0.4,
                   fit: BoxFit.cover,
                 ),
-              ),
-              const SizedBox(height: 32),
-              const Text(
-                'Welcome back',
-                style: TextStyle(color: Colors.grey, fontSize: 16),
               ),
               const SizedBox(height: 4),
               Text(
@@ -170,12 +215,64 @@ class _LoginPageState extends State<LoginPage> {
               const SizedBox(height: 40),
               _isLoading
                   ? const Center(child: CircularProgressIndicator())
-                  : AbsensiMainButton(label: 'Login', onTap: _login),
+                  : _buildLoginButton(),
               const SizedBox(height: 20),
             ],
           ),
         ),
       ),
     );
+  }
+
+  static Future<Map<String, dynamic>> login({
+    required String email,
+    required String password,
+  }) async {
+    final url = Uri.parse('$baseUrl/login');
+    final resp = await http.post(
+      url,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'email': email, 'password': password}),
+    ).timeout(const Duration(seconds: 10));
+
+    print('Response status: ${resp.statusCode}, Body: ${resp.body}');
+
+    if (resp.statusCode == 200) {
+      final body = jsonDecode(resp.body) as Map<String, dynamic>;
+      final prefs = await SharedPreferences.getInstance();
+
+      // Simpan data ke SharedPreferences
+      await prefs.setString('token', body['token']);
+      await prefs.setInt('id_users', body['user']['id']);
+      await prefs.setString('role', body['user']['role']);
+      await prefs.setString('nama', body['user']['nama']);
+
+      // Simpan id_siswa jika ada
+      final idSiswa = body['user']['id_siswa'] as int?;
+      if (idSiswa != null && idSiswa != 0) {
+        await prefs.setInt('id_siswa', idSiswa);
+        print('ID Siswa tersimpan: $idSiswa');
+      } else {
+        await prefs.remove('id_siswa');
+        print('ID Siswa tidak ada atau tidak valid');
+      }
+
+      // Simpan id_kelas jika ada
+      final idKelas = body['user']['id_kelas'] as int?;
+      if (idKelas != null && idKelas != 0) {
+        await prefs.setInt('id_kelas', idKelas);
+        print('ID Kelas tersimpan: $idKelas');
+      } else {
+        await prefs.remove('id_kelas');
+        print('ID Kelas tidak ada atau tidak valid');
+      }
+
+      return {
+        'token': body['token'],
+        'user': body['user'],
+      };
+    } else {
+      throw Exception('Login gagal: ${resp.body}');
+    }
   }
 }

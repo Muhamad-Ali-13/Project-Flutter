@@ -66,19 +66,6 @@ class _KelasPageState extends State<KelasPage> {
                   ),
                 ],
               ),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  const Icon(Icons.person, color: Colors.black54),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      'Wali Kelas: ${kelas.namaGuru ?? 'Belum ada wali kelas'}',
-                      style: const TextStyle(fontSize: 16),
-                    ),
-                  ),
-                ],
-              ),
               const SizedBox(height: 20),
               const Divider(thickness: 1.2),
               const SizedBox(height: 12),
@@ -102,7 +89,7 @@ class _KelasPageState extends State<KelasPage> {
                   const SizedBox(width: 12),
                   ElevatedButton.icon(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.red,
+                      backgroundColor: Utils.mainThemeColor,
                       foregroundColor: Colors.white,
                     ),
                     onPressed: () {
@@ -152,7 +139,7 @@ class _KelasPageState extends State<KelasPage> {
               }
               Navigator.pop(context);
             },
-            child: const Text('Hapus', style: TextStyle(color: Colors.red)),
+            child: const Text('Hapus', style: TextStyle(color: Utils.mainThemeColor)),
           ),
         ],
       ),
@@ -164,17 +151,14 @@ class _KelasPageState extends State<KelasPage> {
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(16),
-        gradient: LinearGradient(
-          colors: [
-            (Utils.mainThemeColor ?? Colors.red).withOpacity(0.8),
-            (Utils.mainThemeColor ?? Colors.red).withOpacity(0.5),
-          ],
+        gradient: const LinearGradient(
+          colors: [Color(0xFFFC221C), Color(0xFFFF0000)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         boxShadow: [
           BoxShadow(
-            color: (Utils.mainThemeColor ?? Colors.red).withOpacity(0.4),
+            color: (Utils.mainThemeColor).withOpacity(0.4),
             offset: const Offset(0, 4),
             blurRadius: 8,
           )
@@ -190,10 +174,6 @@ class _KelasPageState extends State<KelasPage> {
             fontSize: 18,
           ),
         ),
-        subtitle: Text(
-          'Wali Kelas: ${kelas.namaGuru ?? 'Belum ada'}',
-          style: const TextStyle(color: Colors.white70),
-        ),
         trailing: Icon(Icons.class_, color: Colors.white),
       ),
     );
@@ -204,7 +184,7 @@ class _KelasPageState extends State<KelasPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Daftar Kelas'),
-        backgroundColor: Utils.mainThemeColor ?? Colors.red,
+        backgroundColor: Utils.mainThemeColor,
         foregroundColor: Colors.white,
         iconTheme: const IconThemeData(color: Colors.white),
       ),
@@ -238,7 +218,7 @@ class _KelasPageState extends State<KelasPage> {
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        backgroundColor: Utils.mainThemeColor ?? Colors.red,
+        backgroundColor: Utils.mainThemeColor,
         onPressed: () async {
           final result = await Navigator.pushNamed(context, '/add_kelas');
           if (result == true) setState(_loadKelas);

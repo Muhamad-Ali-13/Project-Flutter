@@ -84,7 +84,7 @@ class _SiswaPageState extends State<SiswaPage> {
                       },
                       child: const Text(
                         'Hapus',
-                        style: TextStyle(color: Colors.red),
+                        style: TextStyle(color: Utils.mainThemeColor),
                       ),
                     ),
                   ],
@@ -154,7 +154,7 @@ class _SiswaPageState extends State<SiswaPage> {
               }
               Navigator.pop(context);
             },
-            child: const Text('Hapus', style: TextStyle(color: Colors.red)),
+            child: const Text('Hapus', style: TextStyle(color: Utils.mainThemeColor)),
           ),
         ],
       ),
@@ -163,7 +163,7 @@ class _SiswaPageState extends State<SiswaPage> {
 
   @override
   Widget build(BuildContext context) {
-    final mainColor = Utils.mainThemeColor ?? Colors.red;
+    final mainColor = Utils.mainThemeColor;
 
     return Scaffold(
       appBar: AppBar(
@@ -203,8 +203,8 @@ class _SiswaPageState extends State<SiswaPage> {
                     child: Container(
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(12),
-                        gradient: LinearGradient(
-                          colors: [mainColor.withOpacity(0.7), mainColor.withOpacity(0.4)],
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFFFC221C), Color(0xFFFF0000)],
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                         ),

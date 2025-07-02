@@ -1,3 +1,4 @@
+// pages/guru_page.dart
 import 'package:flutter/material.dart';
 import '../../../models/guru.dart';
 import '../../../services/api_service.dart';
@@ -20,10 +21,11 @@ class _GuruPageState extends State<GuruPage> {
   }
 
   void _loadGuru() {
-    _futureGuru = ApiService.fetchGurus().then(
-          (list) => list.map((e) => Guru.fromJson(e)).toList(),
-    ).catchError((error) {
-      print('Error fetching gurus: $error');
+    _futureGuru = ApiService.fetchGurus().then((list) {
+      // Pastikan fetchGurus() mengembalikan List<Map<String, dynamic>>
+      return list.map((e) => Guru.fromJson(e)).toList();
+    }).catchError((error) {
+      debugPrint('Error fetching gurus: $error');
       return <Guru>[];
     });
   }
@@ -107,7 +109,6 @@ class _GuruPageState extends State<GuruPage> {
     );
   }
 
-  /// Helper untuk membangun satu baris detail
   Widget _buildDetailRow(IconData icon, String label, String value) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),
@@ -124,7 +125,6 @@ class _GuruPageState extends State<GuruPage> {
             child: Text(
               value,
               style: const TextStyle(color: Colors.black87),
-              overflow: TextOverflow.ellipsis,
             ),
           ),
         ],
@@ -132,10 +132,10 @@ class _GuruPageState extends State<GuruPage> {
     );
   }
 
-
   void _confirmDelete(int id) {
     showDialog(
       context: context,
+      barrierDismissible: false,
       builder: (_) => AlertDialog(
         title: const Text('Konfirmasi Hapus'),
         content: const Text('Apakah Anda yakin ingin menghapus guru ini?'),
@@ -146,18 +146,31 @@ class _GuruPageState extends State<GuruPage> {
           ),
           TextButton(
             onPressed: () async {
+              Navigator.pop(context);
+              showDialog(
+                context: context,
+                barrierDismissible: false,
+                builder: (_) => const Center(child: CircularProgressIndicator()),
+              );
               try {
                 await ApiService.deleteGuru(id);
+                Navigator.pop(context);
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Guru berhasil dihapus')),
+                  const SnackBar(
+                    content: Text('Guru berhasil dihapus'),
+                    backgroundColor: Colors.green,
+                  ),
                 );
                 setState(_loadGuru);
               } catch (e) {
+                Navigator.pop(context);
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Gagal menghapus guru: $e')),
+                  SnackBar(
+                    content: Text('Gagal menghapus guru: $e'),
+                    backgroundColor: Colors.red,
+                  ),
                 );
               }
-              Navigator.pop(context);
             },
             child: const Text('Hapus', style: TextStyle(color: Colors.red)),
           ),
@@ -171,16 +184,16 @@ class _GuruPageState extends State<GuruPage> {
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(12),
-        gradient: LinearGradient(
-          colors: [Colors.red.shade400, Colors.red.shade800],
+        gradient: const LinearGradient(
+          colors: [Color(0xFFFC221C), Color(0xFFFF0000)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        boxShadow: [
+        boxShadow: const [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 4,
-            offset: const Offset(2, 2),
+            color: Colors.black26,
+            blurRadius: 6,
+            offset: Offset(2, 4),
           ),
         ],
       ),
@@ -212,7 +225,6 @@ class _GuruPageState extends State<GuruPage> {
         title: const Text('Daftar Guru'),
         backgroundColor: Utils.mainThemeColor ?? Colors.red,
         foregroundColor: Colors.white,
-        iconTheme: const IconThemeData(color: Colors.white),
       ),
       body: SafeArea(
         child: FutureBuilder<List<Guru>>(
@@ -222,18 +234,16 @@ class _GuruPageState extends State<GuruPage> {
               return const Center(child: CircularProgressIndicator());
             } else if (snapshot.hasError || snapshot.data == null) {
               return Center(
-                  child: Text('Error: ${snapshot.error ?? "Data tidak tersedia"}'));
+                child: Text('Error: ${snapshot.error ?? "Data tidak tersedia"}'),
+              );
             } else if (snapshot.data!.isEmpty) {
-              return const Center(child: Text('Tidak ada data guru'));
-            }
-
+              return const Center(child: Text('Tidak ada data guru'));  }
             final guruList = snapshot.data!;
             return ListView.builder(
               padding: const EdgeInsets.all(16),
               itemCount: guruList.length,
               itemBuilder: (context, index) {
-                final guru = guruList[index];
-                return _buildGradientCard(guru);
+                return _buildGradientCard(guruList[index]);
               },
             );
           },
